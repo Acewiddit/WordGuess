@@ -3,7 +3,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>WordGuess</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -14,61 +16,26 @@
 
         <p>Guess the hidden five-letter word!</p>
 
-        <div id="game-board" aria-label="WordGuess game board"></div>
-    </main>
+        <button id="instructions-button" type="button">
+            How to Play
+        </button>
 
-    <script src="script.js"></script>
-</body>
-</html>
+        <section id="instructions" hidden>
+            <h2>How to Play</h2>
+            <p>Guess the hidden five-letter word in six attempts.</p>
+            <p>Green means the letter is in the correct position.</p>
+            <p>Yellow means the letter is in the wrong position.</p>
+            <p>Grey means the letter is not matched.</p>
+        </section>
 
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WordGuess</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-    <main>
-        <h1>WORDGUESS</h1>
-
-        <p>Guess the hidden five-letter word!</p>
-
-        <div id="game-board" aria-label="WordGuess game board"></div>
+        <div id="game-board"
+             aria-label="WordGuess game board"></div>
 
         <p id="message" role="status" aria-live="polite">
             Start typing your guess!
         </p>
-    </main>
 
-    <script src="script.js"></script>
-</body>
-</html>
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WordGuess</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-    <main>
-        <h1>WORDGUESS</h1>
-
-        <p>Guess the hidden five-letter word!</p>
-
-        <div id="game-board" aria-label="WordGuess game board"></div>
-
-        <p id="message" role="status" aria-live="polite">
-            Start typing your guess!
-        </p>
+        <div id="keyboard" aria-label="On-screen keyboard"></div>
 
         <button id="restart-button" type="button">
             Restart Game

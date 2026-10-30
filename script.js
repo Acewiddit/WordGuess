@@ -4,11 +4,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const gameBoard = document.getElementById("game-board");
     const message = document.getElementById("message");
     const restartButton = document.getElementById("restart-button");
+    const keyboard = document.getElementById("keyboard");
+    const instructionsButton =
+        document.getElementById("instructions-button");
+    const instructions =
+        document.getElementById("instructions");
 
     const numberOfRows = 6;
     const numberOfColumns = 5;
 
-    // List of possible hidden words
+    // Words that can be selected as answers
     const wordList = [
         "APPLE", "PLANT", "HOUSE", "TRAIN", "CHAIR",
         "BREAD", "LIGHT", "WATER", "GRAPE", "SMILE",
@@ -16,36 +21,46 @@ document.addEventListener("DOMContentLoaded", function () {
         "GREEN", "BRAVE", "SWEET", "TABLE", "RIVER"
     ];
 
+    // Accepted guesses for this prototype
+    const validWords = new Set([
+        ...wordList,
+        "CRANE", "PLATE", "TRAIL", "PAINT", "HEART",
+        "WORLD", "BRAIN", "SHARE", "LEARN", "POINT",
+        "SOUND", "ROUND", "NIGHT", "SNAKE", "FRUIT",
+        "SUGAR", "FIELD", "FLOOR", "CLOCK", "BRICK"
+    ]);
+
+    const keyboardLayout = [
+        ["Q","W","E","R","T","Y","U","I","O","P"],
+        ["A","S","D","F","G","H","J","K","L"],
+        ["ENTER","Z","X","C","V","B","N","M","BACK"]
+    ];
+
     let secretWord = "";
     let currentRow = 0;
     let currentGuess = "";
     let gameOver = false;
 
-    // Choose a random hidden word
+    const keyStatuses = {};
+
     function chooseRandomWord() {
         const randomIndex = Math.floor(
             Math.random() * wordList.length
         );
-
         return wordList[randomIndex];
     }
 
-    // Create the game board
     function createGameBoard() {
-
         gameBoard.innerHTML = "";
 
         for (let row = 0; row < numberOfRows; row++) {
-
             const boardRow = document.createElement("div");
             boardRow.classList.add("board-row");
 
             for (let col = 0; col < numberOfColumns; col++) {
-
                 const tile = document.createElement("div");
                 tile.classList.add("tile");
                 tile.id = `tile-${row}-${col}`;
-
                 boardRow.appendChild(tile);
             }
 
@@ -53,97 +68,73 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Display the letters being typed
     function updateBoard() {
-
         for (let col = 0; col < numberOfColumns; col++) {
-
             const tile = document.getElementById(
                 `tile-${currentRow}-${col}`
             );
 
             const letter = currentGuess[col] || "";
-
             tile.textContent = letter;
-
-            if (letter !== "") {
-                tile.classList.add("filled");
-            } else {
-                tile.classList.remove("filled");
-            }
+            tile.classList.toggle("filled", letter !== "");
         }
     }
 
-    // Add a letter
     function addLetter(letter) {
-
         if (currentGuess.length < numberOfColumns) {
             currentGuess += letter.toUpperCase();
             updateBoard();
         }
     }
 
-    // Delete the last letter
     function removeLetter() {
-
         if (currentGuess.length > 0) {
             currentGuess = currentGuess.slice(0, -1);
             updateBoard();
         }
     }
 
-    // Compare the guess against the hidden word
     function checkGuess(guess) {
-
         const result = Array(numberOfColumns).fill("absent");
         const remainingLetters = secretWord.split("");
 
-        // First pass: identify correct positions
+        // First pass: correct positions
         for (let i = 0; i < numberOfColumns; i++) {
-
             if (guess[i] === secretWord[i]) {
                 result[i] = "correct";
                 remainingLetters[i] = null;
             }
         }
 
-        // Second pass: identify letters in wrong positions
+        // Second pass: wrong positions
         for (let i = 0; i < numberOfColumns; i++) {
+            if (result[i] === "correct") continue;
 
-            if (result[i] === "correct") {
-                continue;
-            }
+            const index = remainingLetters.indexOf(guess[i]);
 
-            const letterIndex = remainingLetters.indexOf(
-                guess[i]
-            );
-
-            if (letterIndex !== -1) {
+            if (index !== -1) {
                 result[i] = "present";
-                remainingLetters[letterIndex] = null;
+                remainingLetters[index] = null;
             }
         }
 
         return result;
     }
 
-    // Apply colour feedback to the submitted row
     function displayFeedback(guess, result) {
+        const descriptions = {
+            correct: "correct position",
+            present: "wrong position",
+            absent: "not matched"
+        };
 
         for (let col = 0; col < numberOfColumns; col++) {
-
             const tile = document.getElementById(
                 `tile-${currentRow}-${col}`
             );
 
             tile.classList.remove("filled");
             tile.classList.add(result[col]);
-
-            const descriptions = {
-                correct: "correct position",
-                present: "wrong position",
-                absent: "not matched"
-            };
 
             tile.setAttribute(
                 "aria-label",
@@ -152,12 +143,80 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Submit the current guess
-    function submitGuess() {
+    function createKeyboard() {
+        keyboard.innerHTML = "";
 
+        keyboardLayout.forEach(row => {
+            const keyboardRow = document.createElement("div");
+            keyboardRow.classList.add("keyboard-row");
+
+            row.forEach(letter => {
+                const key = document.createElement("button");
+                key.type = "button";
+                key.classList.add("key");
+
+                if (letter.length > 1) {
+                    key.classList.add("wide");
+                }
+
+                key.textContent =
+                    letter === "BACK" ? "⌫" : letter;
+
+                key.dataset.key = letter;
+
+                key.addEventListener("click", function () {
+                    handleKey(letter);
+                });
+
+                keyboardRow.appendChild(key);
+            });
+
+            keyboard.appendChild(keyboardRow);
+        });
+    }
+
+    function updateKeyboard(guess, result) {
+        const priority = {
+            absent: 1,
+            present: 2,
+            correct: 3
+        };
+
+        for (let i = 0; i < guess.length; i++) {
+            const letter = guess[i];
+            const newStatus = result[i];
+            const previousStatus = keyStatuses[letter];
+
+            if (!previousStatus ||
+                priority[newStatus] > priority[previousStatus]) {
+                keyStatuses[letter] = newStatus;
+            }
+        }
+
+        Object.entries(keyStatuses).forEach(([letter, status]) => {
+            const key = keyboard.querySelector(
+                `[data-key="${letter}"]`
+            );
+
+            if (key) {
+                key.classList.remove(
+                    "correct", "present", "absent"
+                );
+                key.classList.add(status);
+            }
+        });
+    }
+
+    function submitGuess() {
         if (currentGuess.length !== numberOfColumns) {
             message.textContent =
                 "Your guess must contain five letters!";
+            return;
+        }
+
+        if (!validWords.has(currentGuess)) {
+            message.textContent =
+                "Word not recognised. Try another word!";
             return;
         }
 
@@ -165,8 +224,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const result = checkGuess(guess);
 
         displayFeedback(guess, result);
+        updateKeyboard(guess, result);
 
-        // Check whether the player has won
         if (guess === secretWord) {
             gameOver = true;
             message.textContent =
@@ -177,7 +236,6 @@ document.addEventListener("DOMContentLoaded", function () {
         currentRow++;
         currentGuess = "";
 
-        // Check whether the player has lost
         if (currentRow >= numberOfRows) {
             gameOver = true;
             message.textContent =
@@ -188,48 +246,63 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Start a new game
-    function restartGame() {
+    function handleKey(key) {
+        if (gameOver) return;
 
+        if (key === "ENTER") {
+            submitGuess();
+        } else if (key === "BACK") {
+            removeLetter();
+        } else if (/^[A-Z]$/.test(key)) {
+            addLetter(key);
+        }
+    }
+
+    function restartGame() {
         secretWord = chooseRandomWord();
         currentRow = 0;
         currentGuess = "";
         gameOver = false;
 
+        Object.keys(keyStatuses).forEach(key => {
+            delete keyStatuses[key];
+        });
+
         createGameBoard();
+        createKeyboard();
 
         message.textContent =
             "New game started! Enter your first guess.";
-
-        console.log("New WordGuess game started.");
     }
 
-    // Listen for keyboard input
     document.addEventListener("keydown", function (event) {
-
-        if (gameOver) {
+        if (event.ctrlKey || event.altKey || event.metaKey) {
             return;
         }
 
-        const key = event.key;
-
-        if (/^[a-zA-Z]$/.test(key)) {
-            addLetter(key);
-
-        } else if (key === "Backspace") {
+        if (event.key === "Enter") {
             event.preventDefault();
-            removeLetter();
-
-        } else if (key === "Enter") {
+            handleKey("ENTER");
+        } else if (event.key === "Backspace") {
             event.preventDefault();
-            submitGuess();
+            handleKey("BACK");
+        } else if (/^[a-zA-Z]$/.test(event.key)) {
+            handleKey(event.key.toUpperCase());
         }
     });
 
-    // Restart button event
     restartButton.addEventListener("click", restartGame);
 
-    // Initialise the game
+    instructionsButton.addEventListener("click", function () {
+        instructions.hidden = !instructions.hidden;
+        instructionsButton.setAttribute(
+            "aria-expanded",
+            String(!instructions.hidden)
+        );
+    });
+
+    instructionsButton.setAttribute("aria-expanded", "false");
+
     restartGame();
 
 });
