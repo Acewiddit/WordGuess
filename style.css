@@ -68,3 +68,47 @@ p {
 .tile {
     transition: border-color 0.2s ease;
 }
+
+
+/* Prototype 3 - Colour feedback */
+
+.tile.correct {
+    background-color: #538d4e;
+    border-color: #538d4e;
+    color: white;
+}
+
+.tile.present {
+    background-color: #b59f3b;
+    border-color: #b59f3b;
+    color: white;
+}
+
+.tile.absent {
+    background-color: #3a3a3c;
+    border-color: #3a3a3c;
+    color: white;
+}
+
+/* Restart button */
+
+#restart-button {
+    background-color: #538d4e;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+#restart-button:hover {
+    background-color: #447a40;
+}
+
+#restart-button:focus-visible {
+    outline: 3px solid white;
+    outline-offset: 3px;
+}
