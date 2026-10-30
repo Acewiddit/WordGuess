@@ -52,3 +52,19 @@ p {
         height: 45px;
     }
 }
+
+
+.tile.filled {
+    border-color: #ffffff;
+}
+
+#message {
+    font-size: 16px;
+    color: #cccccc;
+    margin-top: 20px;
+    min-height: 24px;
+}
+
+.tile {
+    transition: border-color 0.2s ease;
+}
