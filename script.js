@@ -41,6 +41,19 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentGuess = "";
     let gameOver = false;
 
+    const statisticsStorageKey = "wordguess-statistics";
+
+    const defaultStatistics = {
+        gamesPlayed: 0,
+        gamesWon: 0,
+        gamesLost: 0,
+        currentStreak: 0,
+        bestStreak: 0
+    };
+
+    let statistics = loadStatistics();
+
+
     const keyStatuses = {};
 
     function chooseRandomWord() {
@@ -226,21 +239,31 @@ document.addEventListener("DOMContentLoaded", function () {
         displayFeedback(guess, result);
         updateKeyboard(guess, result);
 
+        
         if (guess === secretWord) {
             gameOver = true;
+
+            recordGame(true);
+
             message.textContent =
                 `Congratulations! You guessed the word in ${currentRow + 1} attempts!`;
+
             return;
         }
+
 
         currentRow++;
         currentGuess = "";
 
-        if (currentRow >= numberOfRows) {
-            gameOver = true;
-            message.textContent =
-                `Game over! The correct word was ${secretWord}.`;
-        } else {
+        
+    if (currentRow >= numberOfRows) {
+        gameOver = true;
+
+        recordGame(false);
+
+        message.textContent =
+        `Game over! The correct word was ${secretWord}.`;
+    }else {
             message.textContent =
                 `Attempt ${currentRow + 1} of ${numberOfRows}. Keep guessing!`;
         }
@@ -258,21 +281,134 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function restartGame() {
-        secretWord = chooseRandomWord();
-        currentRow = 0;
-        currentGuess = "";
-        gameOver = false;
+    
+// Load saved statistics from localStorage
+function loadStatistics() {
+    try {
+        const savedData = localStorage.getItem(
+            statisticsStorageKey
+        );
 
-        Object.keys(keyStatuses).forEach(key => {
-            delete keyStatuses[key];
-        });
+        if (savedData) {
+            const parsedData = JSON.parse(savedData);
 
-        createGameBoard();
-        createKeyboard();
+            // Accept only valid saved statistics
+            const isValid = Object.keys(defaultStatistics).every(
+                key =>
+                    Number.isSafeInteger(parsedData?.[key]) &&
+                    parsedData[key] >= 0
+            );
 
-        message.textContent =
-            "New game started! Enter your first guess.";
+            if (isValid) {
+                return { ...parsedData };
+            }
+        }
+    } catch (error) {
+        console.warn("Unable to load statistics:", error);
+    }
+
+    return { ...defaultStatistics };
+}
+
+// Save statistics to browser storage
+function saveStatistics() {
+    try {
+        localStorage.setItem(
+            statisticsStorageKey,
+            JSON.stringify(statistics)
+        );
+    } catch (error) {
+        console.warn("Unable to save statistics:", error);
+    }
+}
+
+// Update the statistics dashboard
+function updateStatisticsDisplay() {
+
+    const winPercentage =
+        statistics.gamesPlayed === 0
+            ? 0
+            : Math.round(
+                (statistics.gamesWon / statistics.gamesPlayed) * 100
+            );
+
+    document.getElementById("games-played").textContent =
+        statistics.gamesPlayed;
+
+    document.getElementById("games-won").textContent =
+        statistics.gamesWon;
+
+    document.getElementById("games-lost").textContent =
+        statistics.gamesLost;
+
+    document.getElementById("win-percentage").textContent =
+        `${winPercentage}%`;
+
+    document.getElementById("current-streak").textContent =
+        statistics.currentStreak;
+
+    document.getElementById("best-streak").textContent =
+        statistics.bestStreak;
+
+    document.getElementById("win-rate-bar").style.width =
+        `${winPercentage}%`;
+}
+
+// Record a completed game
+function recordGame(won) {
+
+    statistics.gamesPlayed++;
+
+    if (won) {
+        statistics.gamesWon++;
+        statistics.currentStreak++;
+
+        if (statistics.currentStreak > statistics.bestStreak) {
+            statistics.bestStreak = statistics.currentStreak;
+        }
+
+    } else {
+        statistics.gamesLost++;
+        statistics.currentStreak = 0;
+    }
+
+    saveStatistics();
+    updateStatisticsDisplay();
+}
+
+// Reset all statistics
+function resetStatistics() {
+
+    const confirmed = window.confirm(
+        "Are you sure you want to reset all game statistics?"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    statistics = { ...defaultStatistics };
+
+    saveStatistics();
+    updateStatisticsDisplay();
+}
+
+
+function restartGame() {
+    secretWord = chooseRandomWord();
+    currentRow = 0;
+    currentGuess = "";
+    gameOver = false;
+
+    Object.keys(keyStatuses).forEach(key => {
+        delete keyStatuses[key];
+    });
+
+    createGameBoard();
+    createKeyboard();
+
+    message.textContent =
+        "New game started! Enter your first guess.";
     }
 
     document.addEventListener("keydown", function (event) {
@@ -303,6 +439,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     instructionsButton.setAttribute("aria-expanded", "false");
 
+    
+    // Reset statistics button
+    document.getElementById("reset-statistics")
+        .addEventListener("click", resetStatistics);
+
+    // Display previously saved statistics
+    updateStatisticsDisplay();
+
+    // Start the game
     restartGame();
 
-});
+    });

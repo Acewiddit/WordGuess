@@ -40,6 +40,55 @@
         <button id="restart-button" type="button">
             Restart Game
         </button>
+        
+        <section id="statistics" aria-labelledby="statistics-title">
+
+            <h2 id="statistics-title">Game Statistics</h2>
+
+            <div class="statistics-grid">
+
+        <div class="stat-card">
+            <span id="games-played">0</span>
+            <p>Games Played</p>
+        </div>
+
+        <div class="stat-card">
+            <span id="games-won">0</span>
+            <p>Games Won</p>
+        </div>
+
+        <div class="stat-card">
+            <span id="games-lost">0</span>
+            <p>Games Lost</p>
+        </div>
+
+        <div class="stat-card">
+            <span id="win-percentage">0%</span>
+            <p>Win Rate</p>
+        </div>
+
+        <div class="stat-card">
+            <span id="current-streak">0</span>
+            <p>Current Streak</p>
+        </div>
+
+        <div class="stat-card">
+            <span id="best-streak">0</span>
+            <p>Best Streak</p>
+        </div>
+
+    </div>
+
+    <div class="win-rate-container">
+        <div id="win-rate-bar"></div>
+    </div>
+
+    <button id="reset-statistics" type="button">
+        Reset Statistics
+    </button>
+
+</section>
+
     </main>
 
     <script src="script.js"></script>
